@@ -16,15 +16,15 @@ object Joining extends App {
 
   object Types {
     type City = String
-    case class Str1 (name: String, amount: Int)
-    case class Str2 (name: String, change: Int)
+    case class Stocks (name: String, amount: Int)
+    case class Changes (name: String, change: Int)
   }
 
   object Topics {
-    val stockTopic = "topic4"
-    val changes = "topic5"
-    val result = "topic6"
-    val totalChanges = "topic7"
+    val stockTopic = "stock_topic"
+    val changesTopic = "changes_topic"
+    val resultTopic = "result_topic"
+    val totalChangesTopic = "total_changes_topic"
   }
 
   import Types._
@@ -40,26 +40,27 @@ object Joining extends App {
 
 
   val builder: StreamsBuilder = new StreamsBuilder
-  val Stream1: KTable[City, Str1] = builder.table[City, Str1](Topics.stockTopic)
-  val Stream2: KStream[City, Str2] = builder.stream[City, Str2](Topics.changes)
+  val stockTable: KTable[City, Stocks] = builder.table[City, Stocks](Topics.stockTopic)
+  val changesStream: KStream[City, Changes] = builder.stream[City, Changes](Topics.changesTopic)
 
 
-  val Joined1 = Stream2.join(Stream1) {  (first, second) => Str1(first.name, first.change + second.amount) }
-  Joined1.to(Topics.result)
+  val JoinedStream = changesStream.join(stockTable) {(stocks, changes) => Stocks(stocks.name, stocks.change + changes.amount)}
+  JoinedStream.to(Topics.resultTopic)
 
-  val AllChanges = Stream2.groupByKey
-    .reduce((value1,value2) => Str2(value2.name, value1.change + value2.change))
-  AllChanges.toStream.to(Topics.totalChanges)
+  val totalChanges = changesStream.selectKey((city,changes) => (city,changes.name))
+    .groupByKey
+    .reduce((value1,value2) => Changes(value2.name, value1.change + value2.change))
+  totalChanges.toStream.to(Topics.totalChangesTopic)
 
   val topology = builder.build()
 
-  val props: Properties = new Properties()
-  props.put(StreamsConfig.APPLICATION_ID_CONFIG, "joining-application")
-  props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092")
+  val properties: Properties = new Properties()
+  properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "joining-application")
+  properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092")
 
-  val app = new KafkaStreams(topology, props)
-  app.start()
+  val application = new KafkaStreams(topology, properties)
+  application.start()
     sys.ShutdownHookThread {
-    app.close(Duration.ofSeconds(10))
+    application.close(Duration.ofSeconds(10))
   }
 }
