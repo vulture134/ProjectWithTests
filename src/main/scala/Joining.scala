@@ -47,7 +47,8 @@ object Joining extends App {
   val Joined1 = Stream2.join(Stream1) {  (first, second) => Str1(first.name, first.change + second.amount) }
   Joined1.to(Topics.result)
 
-  val AllChanges = Stream2.groupByKey
+  val AllChanges = Stream2.selectKey((City,Str2) => (City,Str2.name))
+    .groupByKey
     .reduce((value1,value2) => Str2(value2.name, value1.change + value2.change))
   AllChanges.toStream.to(Topics.totalChanges)
 
