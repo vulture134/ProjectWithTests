@@ -1,3 +1,3 @@
 package domain
 
-case class Changes(name: String, change: Int)
+case class Changes (change: Int)

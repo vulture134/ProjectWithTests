@@ -1,3 +1,3 @@
 package domain
 
-case class Stocks(name: String, amount: Int)
+case class Stocks (amount: Int)

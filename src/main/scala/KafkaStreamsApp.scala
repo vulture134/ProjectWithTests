@@ -13,13 +13,13 @@ class KafkaStreamsApp(stockTopic: String, changeTopic: String, changeOutputTopic
 
 
   val joinedStream: KStream[Key, Stocks] = changesStream.join(stockTable) {
-    (stocks, changes) => Stocks(stocks.name, stocks.change + changes.amount)
+    (stocks, changes) => Stocks(stocks.change + changes.amount)
   }
   joinedStream.to(stockOutputTopic)
 
   val totalChanges: KTable[Key, Changes] = changesStream
     .groupByKey
-    .reduce((value1,value2) => Changes(value2.name, value1.change + value2.change))
+    .reduce((value1,value2) => Changes(value1.change + value2.change))
   totalChanges.toStream.to(changeOutputTopic)
 
   val topology: Topology = builder.build()

@@ -1,3 +1,3 @@
 package domain
 
-case class Key(product: String, city: String)
+case class Key (city: String, product: String)
