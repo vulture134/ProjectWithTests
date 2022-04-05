@@ -13,7 +13,7 @@ class KafkaStreamsApp(stockTopic: String, changeTopic: String, changeOutputTopic
 
 
   val joinedStream: KStream[Key, Stocks] = changesStream.join(stockTable) {
-    (stocks, changes) => Stocks(stocks.change + changes.amount)
+    (changes, stocks) => Stocks(changes.change + stocks.amount)
   }
   joinedStream.to(stockOutputTopic)
 
