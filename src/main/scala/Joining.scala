@@ -15,7 +15,7 @@ import io.circe.syntax._
 object Joining extends App {
 
   object Types {
-    type Id = String
+    type City = String
     case class Str1 (name: String, amount: Int)
     case class Str2 (name: String, change: Int)
   }
@@ -24,6 +24,7 @@ object Joining extends App {
     val stockTopic = "topic4"
     val changes = "topic5"
     val result = "topic6"
+    val totalChanges = "topic7"
   }
 
   import Types._
@@ -39,12 +40,16 @@ object Joining extends App {
 
 
   val builder: StreamsBuilder = new StreamsBuilder
-  val Stream1: KTable[Id, Str1] = builder.table[Id, Str1](Topics.stockTopic)
-  val Stream2: KStream[Id, Str2] = builder.stream[Id, Str2](Topics.changes)
+  val Stream1: KTable[City, Str1] = builder.table[City, Str1](Topics.stockTopic)
+  val Stream2: KStream[City, Str2] = builder.stream[City, Str2](Topics.changes)
 
 
   val Joined1 = Stream2.join(Stream1) {  (first, second) => Str1(first.name, first.change + second.amount) }
   Joined1.to(Topics.result)
+
+  val AllChanges = Stream2.groupByKey
+    .reduce((value1,value2) => Str2(value2.name, value1.change + value2.change))
+  AllChanges.toStream.to(Topics.totalChanges)
 
   val topology = builder.build()
 
