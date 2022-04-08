@@ -16,8 +16,10 @@ class KafkaStreamsApp {
     .reduce((value1, value2) => Changes(value1.change + value2.change))
   totalChanges.toStream.to(Topics.totalChangesTopic)
 
-  val joinedStream: KTable[Key, Stocks] = totalChanges.join(stockTable) {
-    (changes, stocks) => Stocks(changes.change + stocks.amount)
+  val joinedStream: KTable[Key, Stocks] = totalChanges.outerJoin(stockTable) {
+    case (changes, null) =>  Stocks(changes.change)
+    case (null, stocks) =>  Stocks(stocks.amount)
+    case (changes, stocks) => Stocks(changes.change + stocks.amount)
   }
   joinedStream.toStream.to(Topics.resultTopic)
 
