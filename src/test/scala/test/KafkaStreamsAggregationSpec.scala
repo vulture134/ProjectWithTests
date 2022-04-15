@@ -2,6 +2,7 @@ package test
 
 import domain._
 import io.circe.generic.auto._
+import org.apache.kafka.streams.scala.StreamsBuilder
 import org.apache.kafka.streams.{KeyValue, StreamsConfig, TopologyTestDriver}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should._
@@ -32,7 +33,11 @@ class KafkaStreamsAggregationSpec extends AnyFlatSpec with Matchers {
   // -------  Aggregation of kStream data ------------ //
   "Aggregation" should "sum all the changes' values of the corresponding key" in {
 
-    val driver = new TopologyTestDriver(KafkaStreamsJoins.kStreamAggregation(inputTopic, outputTopic), config)
+    val builder = new StreamsBuilder()
+
+    KafkaStreamsJoins.kStreamAggregation(builder)(inputTopic, outputTopic)
+
+    val driver = new TopologyTestDriver(builder.build(), config)
 
     val inputTopicA = driver.createInputTopic(inputTopic, Serde.serde[Key].serializer, Serde.serde[Changes].serializer)
 

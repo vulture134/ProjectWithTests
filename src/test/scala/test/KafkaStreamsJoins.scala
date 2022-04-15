@@ -6,34 +6,29 @@ import io.circe.generic.auto._
 import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.kstream.{KStream, KTable, Materialized}
 import org.apache.kafka.streams.scala.{ByteArrayKeyValueStore, StreamsBuilder}
-import org.apache.kafka.streams.{StreamsConfig, Topology}
+import org.apache.kafka.streams.{KafkaStreams, StreamsConfig, Topology}
 
+import java.time.Duration
 import java.util.Properties
 
 object KafkaStreamsJoins {
 
-  val props: Properties = {
-    val p = new Properties()
-    p.put(StreamsConfig.APPLICATION_ID_CONFIG, "kafka-streams-examples")
-    p.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092")
-    p
-  }
+  val properties: Properties = new Properties()
+  properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "joining-application")
+  properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092")
 
-  def kStreamAggregation(inputTopic: String, outputTopicA: String): Topology = {
+  def kStreamAggregation(builder: StreamsBuilder)(inputTopic: String, outputTopicA: String): Unit = {
 
-    val builder: StreamsBuilder = new StreamsBuilder
     val changesStream: KStream[Key, Changes] = builder.stream[Key, Changes](inputTopic)
     val totalChanges: KTable[Key, Changes] = changesStream
       .groupByKey
       .reduce((value1, value2) => Changes(value1.change + value2.change))
     totalChanges.toStream.to(outputTopicA)
 
-    builder.build()
   }
 
-  def kTableToKTableOuterJoin(inputTopic1: String, inputTopic2: String, outputTopic: String, storeName: String): Topology = {
+  def kTableToKTableOuterJoin(builder: StreamsBuilder)(inputTopic1: String, inputTopic2: String, outputTopic: String, storeName: String): Unit = {
 
-    val builder: StreamsBuilder = new StreamsBuilder
     val stockTable: KTable[Key, Stocks] = builder.table[Key, Stocks](inputTopic1)
     val changesTable: KTable[Key, Changes] = builder.table[Key, Changes](inputTopic2)
 
@@ -45,6 +40,21 @@ object KafkaStreamsJoins {
       case (changes, stocks) => Stocks(changes.change + stocks.amount)
     }.toStream.to(outputTopic)
 
-    builder.build()
+  }
+
+  val builder: StreamsBuilder = new StreamsBuilder
+
+  kStreamAggregation(builder)("changes_topic", "total_changes_topic")
+
+  kTableToKTableOuterJoin(builder)("stock_topic", "total_changes_topic", "result_topic", "storeName")
+
+  val topology: Topology = builder.build()
+
+  val application = new KafkaStreams(topology, properties)
+  application.start()
+  sys.ShutdownHookThread {
+    application.close(Duration.ofSeconds(10))
+
   }
 }
+

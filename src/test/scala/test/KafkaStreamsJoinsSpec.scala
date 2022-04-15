@@ -4,6 +4,8 @@ import org.apache.kafka.streams.{KeyValue, StreamsConfig, TopologyTestDriver}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should._
 import io.circe.generic.auto._
+import org.apache.kafka.streams.scala.StreamsBuilder
+
 import java.util
 import java.util.Properties
 
@@ -39,8 +41,11 @@ class KafkaStreamsJoinsSpec extends AnyFlatSpec with Matchers {
   // -------  KTable to KTable Joins ------------ //
   "KTable to KTable Outer join" should "modify the amount value by the change value of the corresponding key" in {
 
-    val driver = new TopologyTestDriver(
-      KafkaStreamsJoins.kTableToKTableOuterJoin(inputTopicOne, inputTopicTwo, outputTopicOne, stateStore), config)
+    val builder = new StreamsBuilder()
+
+    KafkaStreamsJoins.kTableToKTableOuterJoin(builder)(inputTopicOne, inputTopicTwo, outputTopicOne, stateStore)
+
+    val driver = new TopologyTestDriver(builder.build(), config)
 
     val inputTopic1 = driver.createInputTopic(inputTopicOne, Serde.serde[Key].serializer, Serde.serde[Stocks].serializer)
     val inputTopic2 = driver.createInputTopic(inputTopicTwo, Serde.serde[Key].serializer, Serde.serde[Changes].serializer)
