@@ -1,12 +1,14 @@
-package test
+package KafkaStreamsLogic
 
-import domain.Serde._
 import domain.{Changes, Key, Stocks}
-import io.circe.generic.auto._
-import org.apache.kafka.streams.scala.ImplicitConversions._
 import org.apache.kafka.streams.scala.kstream.{KStream, KTable, Materialized}
 import org.apache.kafka.streams.scala.{ByteArrayKeyValueStore, StreamsBuilder}
-import org.apache.kafka.streams.{KafkaStreams, StreamsConfig, Topology}
+import org.apache.kafka.streams.{StreamsConfig}
+import domain.Serde._
+import io.circe.generic.auto._
+import org.apache.kafka.streams.scala.ImplicitConversions._
+
+
 
 import java.time.Duration
 import java.util.Properties
@@ -42,19 +44,4 @@ object KafkaStreamsJoins {
 
   }
 
-  val builder: StreamsBuilder = new StreamsBuilder
-
-  kStreamAggregation(builder)("changes_topic", "total_changes_topic")
-
-  kTableToKTableOuterJoin(builder)("stock_topic", "total_changes_topic", "result_topic", "storeName")
-
-  val topology: Topology = builder.build()
-
-  val application = new KafkaStreams(topology, properties)
-  application.start()
-  sys.ShutdownHookThread {
-    application.close(Duration.ofSeconds(10))
-
-  }
 }
-

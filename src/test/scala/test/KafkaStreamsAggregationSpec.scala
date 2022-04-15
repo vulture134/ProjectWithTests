@@ -1,5 +1,6 @@
 package test
 
+import KafkaStreamsLogic.KafkaStreamsJoins
 import domain._
 import io.circe.generic.auto._
 import org.apache.kafka.streams.scala.StreamsBuilder

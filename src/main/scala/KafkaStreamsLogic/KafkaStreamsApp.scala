@@ -1,3 +1,5 @@
+package KafkaStreamsLogic
+
 import domain.Serde._
 import domain.{Changes, Key, Stocks, Topics}
 import io.circe.generic.auto._

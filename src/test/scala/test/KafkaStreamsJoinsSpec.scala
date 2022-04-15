@@ -1,4 +1,5 @@
 package test
+import KafkaStreamsLogic.KafkaStreamsJoins
 import domain._
 import org.apache.kafka.streams.{KeyValue, StreamsConfig, TopologyTestDriver}
 import org.scalatest.flatspec.AnyFlatSpec
