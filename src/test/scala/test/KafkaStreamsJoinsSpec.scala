@@ -32,8 +32,8 @@ class KafkaStreamsJoinsSpec extends AnyFlatSpec with Matchers {
   ).asJava
 
   val config = new Properties()
-  config.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "testing")
-  config.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "testing:1234")
+  config.setProperty(StreamsConfig.APPLICATION_ID_CONFIG, "testing2")
+  config.setProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "testing:1235")
 
 
   // -------  KTable to KTable Joins ------------ //
