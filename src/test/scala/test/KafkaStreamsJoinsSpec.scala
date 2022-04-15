@@ -49,9 +49,12 @@ class KafkaStreamsJoinsSpec extends AnyFlatSpec with Matchers {
     inputTopic2.pipeKeyValueList(changesTopic)
 
     val testOutputTopic = driver.createOutputTopic(outputTopicOne, Serde.serde[Key].deserializer, Serde.serde[Stocks].deserializer)
-    assert(testOutputTopic.readKeyValuesToMap().get(Key("Samara", "moloko")) == Stocks(58))
-
-
+    val results = testOutputTopic.readKeyValuesToMap()
+    assert(results.get(Key("Samara", "hleb")) == Stocks(1))
+    assert(results.get(Key("Samara", "moloko")) == Stocks(58))
+    assert(results.get(Key("Saratov", "moloko")) == Stocks(10))
+    assert(results.get(Key("Togliatti", "sahar")) == Stocks(100))
+    assert(results.get(Key("Pskov", "sol")) == Stocks(25))
 
     driver.close()
   }

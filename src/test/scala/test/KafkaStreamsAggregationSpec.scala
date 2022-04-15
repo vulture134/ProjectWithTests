@@ -19,10 +19,10 @@ class KafkaStreamsAggregationSpec extends AnyFlatSpec with Matchers {
   val outputTopic = "output-topic"
 
   val changesTopicA: util.List[KeyValue[Key, Changes]] = scala.collection.mutable.Seq[KeyValue[Key, Changes]](
-    (Key("Samara", "alko"), Changes(20)),
-    (Key("Samara", "alko"), Changes(-15)),
-    (Key("Saratov", "hleb"), Changes(-10)),
-    (Key("Saratov", "moloko"), Changes(-10))
+    (Key("Volsk", "vodka"), Changes(20)),
+    (Key("Volsk", "vodka"), Changes(-15)),
+    (Key("Syzran", "pivo"), Changes(-10)),
+    (Key("Syzran", "vino"), Changes(-19))
   ).asJava
 
   val config = new Properties()
@@ -39,7 +39,10 @@ class KafkaStreamsAggregationSpec extends AnyFlatSpec with Matchers {
     inputTopicA.pipeKeyValueList(changesTopicA)
 
     val testOutputTopic = driver.createOutputTopic(outputTopic, Serde.serde[Key].deserializer, Serde.serde[Changes].deserializer)
-    assert(testOutputTopic.readKeyValuesToMap().get(Key("Samara", "alko")) == Changes(5))
+    val results = testOutputTopic.readKeyValuesToMap()
+    assert(results.get(Key("Volsk", "vodka")) == Changes(5))
+    assert(results.get(Key("Syzran", "pivo")) == Changes(-10))
+    assert(results.get(Key("Syzran", "vino")) == Changes(-19))
 
     driver.close()
   }
